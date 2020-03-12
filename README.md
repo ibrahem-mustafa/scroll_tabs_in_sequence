@@ -1,4 +1,4 @@
-# chrome_tabs_tabs_clone
+# scroll_tabs_in_sequence
 Adapted from Chrome
 
 ## Still in development 
