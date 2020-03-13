@@ -1,7 +1,5 @@
-import 'package:chrome_tabs_tabs_clone/widgets/tab_widget.dart';
-import 'package:chrome_tabs_tabs_clone/widgets/tabs_preview_widget.dart';
+import 'package:chrome_tabs_tabs_clone/widgets/sequence_list.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 
 void main() => runApp(MyApp());
 
@@ -34,7 +32,6 @@ class _MyHomePageState extends State<MyHomePage>
   double minTop;
   double maxTop;
 
-  List<TabWidget> tabs;
 
   @override
   void initState() {
@@ -50,10 +47,10 @@ class _MyHomePageState extends State<MyHomePage>
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: TabsPreviewWidget(
+      body: SequenceList(
         maxSpaceBetweenTwoTabs: tabHeight * .20,
         minTabHeight: tabHeight,
-        minTapTop: 10,
+        minSpaceBetweenTwoTabs: 10,
         context: context,
         tabsContent: <Widget>[
           Text('tab 1'),

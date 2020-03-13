@@ -1,30 +1,28 @@
-import 'package:chrome_tabs_tabs_clone/widgets/tab_widget.dart';
+import 'package:chrome_tabs_tabs_clone/widgets/sequence_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 
-class TabsPreviewWidget extends StatefulWidget {
+class SequenceList extends StatefulWidget {
   final BuildContext context;
   final List<Widget> tabsContent;
   final double minTabHeight;
   final double minTabWidth;
-  final double minTapTop;
-  final double maxTapTop;
   final double maxSpaceBetweenTwoTabs;
+  final double minSpaceBetweenTwoTabs;
 
-  TabsPreviewWidget({
+  SequenceList({
     @required this.context,
     @required this.tabsContent,
     @required this.minTabHeight,
     @required this.maxSpaceBetweenTwoTabs,
-    @required this.minTapTop,
+    @required this.minSpaceBetweenTwoTabs,
     this.minTabWidth,
-    this.maxTapTop,
   });
   @override
   _TabsPreviewWidgetState createState() => _TabsPreviewWidgetState();
 }
 
-class _TabsPreviewWidgetState extends State<TabsPreviewWidget>
+class _TabsPreviewWidgetState extends State<SequenceList>
     with SingleTickerProviderStateMixin {
   AnimationController _animationController;
   Animation<double> _animation;
@@ -33,7 +31,7 @@ class _TabsPreviewWidgetState extends State<TabsPreviewWidget>
   double distance = 0;
 
   bool forwardDrag;
-  List<TabWidget> tabs = [];
+  List<SequenceItem> tabs = [];
   List<AnimationController> animatedTabs = [];
   double animationLastStep = 0;
 
@@ -41,21 +39,19 @@ class _TabsPreviewWidgetState extends State<TabsPreviewWidget>
   void initState() {
     super.initState();
     _animationController =
-        AnimationController(vsync: this, duration: Duration(seconds: 3));
+        AnimationController(vsync: this, duration: Duration(milliseconds: 300));
 
     _animationController.addListener(() {
       if (animationLastStep == 0) {
         animationLastStep = _animation.value;
       }
       for (int i = tabs.length - 1; i >= 0; i--) {
-        if (shouldUpdatePosition(i, forwardDrag, _animation.value - animationLastStep)) {
-          tabs[i].updatePosition(_animation.value - animationLastStep);
+        if (shouldUpdatePosition(i, forwardDrag, _animation.value)) {
+          tabs[i].updatePosition(_animation.value);
         }
       }
-      animationLastStep =  _animation.value;
+      animationLastStep = _animation.value;
     });
-
-
 
     mq = MediaQuery.of(widget.context);
     buildTabs(widget.tabsContent);
@@ -65,13 +61,18 @@ class _TabsPreviewWidgetState extends State<TabsPreviewWidget>
     this.tabs.clear();
     widget.tabsContent.asMap().forEach((i, tabContent) {
       tabs.add(
-        TabWidget(
+        SequenceItem(
+          linkedItemData: () {
+            return i > 0 ? tabs[i - 1].data : null;
+          },
+          maxSpaceBetweenTwoTabs: widget.maxSpaceBetweenTwoTabs,
+          minSpaceBetweenTwoTabs: widget.minSpaceBetweenTwoTabs,
           child: tabContent,
-          maxTop: widget.maxTapTop ?? widget.maxSpaceBetweenTwoTabs * i + 1,
-          minTop: widget.minTapTop * (i + 1),
+          maxTop: widget.maxSpaceBetweenTwoTabs * (i + 1),
+          minTop: widget.minSpaceBetweenTwoTabs * (i + 1),
           minWidth: widget.minTabWidth ?? mq.size.width * .75,
           height: widget.minTabHeight,
-          maxSpaceBetweenTabs: widget.maxSpaceBetweenTwoTabs,
+          isFirst: i == 0,
         ),
       );
     });
@@ -81,8 +82,9 @@ class _TabsPreviewWidgetState extends State<TabsPreviewWidget>
     @required Velocity velocity,
     @required double height,
     @required double distance,
-    double sensitivity = 1,
+    double sensitivity = .8,
   }) {
+    // animation.animate();
     final unitsPerSecondY = velocity.pixelsPerSecond.dy / height;
     final unitsPerSecond = Offset(0.0, unitsPerSecondY);
 
@@ -90,14 +92,15 @@ class _TabsPreviewWidgetState extends State<TabsPreviewWidget>
 
     const spring = SpringDescription(mass: 30, stiffness: 1, damping: 1);
 
-    final simulation = SpringSimulation(spring, 0, sensitivity, unitVelocity);
+    final simulation = SpringSimulation(spring, 0, 1, unitVelocity);
 
     // print((1 - (1/unitsPerSecondY  +1)));
     // print(velocity.pixelsPerSecond.dy / distance);
-    print(distance * (1 - (1/(unitsPerSecondY + 1))));
+    // print(unitsPerSecondY.abs());
+    // print({'animationDistance': distance * (1 - (1 / (unitsPerSecondY + 1)))});
     _animation = _animationController.drive(Tween(
       begin: 0,
-      end: distance * (1 - (1/(unitsPerSecondY + 1))),
+      end: distance * (1 - (1 / (unitsPerSecondY.abs() + 1))) * sensitivity,
     ));
 
     _animationController.animateWith(simulation).whenCompleteOrCancel(() {
@@ -109,7 +112,7 @@ class _TabsPreviewWidgetState extends State<TabsPreviewWidget>
     if (index == 0) return false;
 
     if (forward) {
-      double space = tabs[1].top - tabs[0].top;
+      double space = tabs[1].data.top + distance - tabs[0].data.top;
 
       if (space >= widget.maxSpaceBetweenTwoTabs) {
         return false;
@@ -117,17 +120,13 @@ class _TabsPreviewWidgetState extends State<TabsPreviewWidget>
 
       if (index == tabs.length - 1) return true;
 
-      space = (tabs[index + 1].top) - tabs[index].top;
-      print('=================================================');
-      print(index);
-      print(space);
-      print(widget.maxSpaceBetweenTwoTabs);
-      print('=================================================');
-      if (space <= widget.maxSpaceBetweenTwoTabs ) return false;
+      space = (tabs[index + 1].data.top) - tabs[index].data.top;
+      if (space <= widget.maxSpaceBetweenTwoTabs) return false;
 
       return true;
     } else {
-      if (tabs[index].top > widget.minTapTop * (index + 1)) return true;
+      if (tabs[index].data.top > widget.minSpaceBetweenTwoTabs * (index + 1))
+        return true;
 
       return false;
     }
@@ -151,26 +150,35 @@ class _TabsPreviewWidgetState extends State<TabsPreviewWidget>
         distance = 0;
       },
       onVerticalDragUpdate: (details) {
+
+        
+
         double diffPosition =
-            (details.localPosition.dy - dragStartPoint).floorToDouble();
-        dragStartPoint += diffPosition;
-        distance += diffPosition;
+            (details.localPosition.dy - dragStartPoint);
         forwardDrag = diffPosition > 0;
+
+        if ((diffPosition > 0 && distance < 0) || (diffPosition < 0 && distance > 0)) {
+          distance = 0;
+        }
+
+        print({details.localPosition.dy: distance});
+        print(diffPosition);
+        
+        dragStartPoint = details.localPosition.dy;
+
+        distance += diffPosition;
         // tabs[tabs.length - 1].updatePosition(diffPosition);
-        for (int i = tabs.length - 1; i >= 0; i--) { 
+        for (int i = tabs.length - 1; i >= 0; i--) {
           if (shouldUpdatePosition(i, forwardDrag, diffPosition)) {
             tabs[i].updatePosition(diffPosition);
           }
         }
       },
       onVerticalDragEnd: (details) {
-        
-
         runAnimation(
             height: mq.size.height,
             distance: distance,
             velocity: details.velocity);
-        
       },
       child: Container(
         width: MediaQuery.of(context).size.width,
