@@ -9,6 +9,9 @@ class SequenceList extends StatefulWidget {
   final double minTabWidth;
   final double maxSpaceBetweenTwoTabs;
   final double minSpaceBetweenTwoTabs;
+  final int applyMinSpaceTill;
+  BoxDecoration itemDecoration;
+  BoxDecoration listContainerDecoration;
 
   SequenceList({
     @required this.context,
@@ -16,6 +19,9 @@ class SequenceList extends StatefulWidget {
     @required this.minTabHeight,
     @required this.maxSpaceBetweenTwoTabs,
     @required this.minSpaceBetweenTwoTabs,
+    this.applyMinSpaceTill = 4,
+    this.itemDecoration,
+    this.listContainerDecoration,
     this.minTabWidth,
   });
   @override
@@ -39,15 +45,15 @@ class _TabsPreviewWidgetState extends State<SequenceList>
   void initState() {
     super.initState();
     _animationController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 300));
+        AnimationController(vsync: this, duration: Duration(seconds: 1));
 
     _animationController.addListener(() {
       if (animationLastStep == 0) {
         animationLastStep = _animation.value;
       }
       for (int i = tabs.length - 1; i >= 0; i--) {
-        if (shouldUpdatePosition(i, forwardDrag, _animation.value)) {
-          tabs[i].updatePosition(_animation.value);
+        if (shouldUpdatePosition(i, forwardDrag, _animation.value - animationLastStep)) {
+          tabs[i].updatePosition( _animation.value -animationLastStep );
         }
       }
       animationLastStep = _animation.value;
@@ -65,11 +71,12 @@ class _TabsPreviewWidgetState extends State<SequenceList>
           linkedItemData: () {
             return i > 0 ? tabs[i - 1].data : null;
           },
+          decoration: widget.itemDecoration,
           maxSpaceBetweenTwoTabs: widget.maxSpaceBetweenTwoTabs,
           minSpaceBetweenTwoTabs: widget.minSpaceBetweenTwoTabs,
           child: tabContent,
           maxTop: widget.maxSpaceBetweenTwoTabs * (i + 1),
-          minTop: widget.minSpaceBetweenTwoTabs * (i + 1),
+          minTop:  widget.minSpaceBetweenTwoTabs * ((i < widget.applyMinSpaceTill ? i : widget.applyMinSpaceTill) + 1),
           minWidth: widget.minTabWidth ?? mq.size.width * .75,
           height: widget.minTabHeight,
           isFirst: i == 0,
@@ -81,26 +88,22 @@ class _TabsPreviewWidgetState extends State<SequenceList>
   void runAnimation({
     @required Velocity velocity,
     @required double height,
-    @required double distance,
-    double sensitivity = .8,
+    double sensitivity = .6,
   }) {
+
     // animation.animate();
     final unitsPerSecondY = velocity.pixelsPerSecond.dy / height;
     final unitsPerSecond = Offset(0.0, unitsPerSecondY);
 
     final unitVelocity = unitsPerSecond.distance;
 
-    const spring = SpringDescription(mass: 30, stiffness: 1, damping: 1);
+    const spring = SpringDescription(mass: 10, stiffness: 5, damping: 1);
 
     final simulation = SpringSimulation(spring, 0, 1, unitVelocity);
 
-    // print((1 - (1/unitsPerSecondY  +1)));
-    // print(velocity.pixelsPerSecond.dy / distance);
-    // print(unitsPerSecondY.abs());
-    // print({'animationDistance': distance * (1 - (1 / (unitsPerSecondY + 1)))});
     _animation = _animationController.drive(Tween(
       begin: 0,
-      end: distance * (1 - (1 / (unitsPerSecondY.abs() + 1))) * sensitivity,
+      end:  velocity.pixelsPerSecond.dy * sensitivity,
     ));
 
     _animationController.animateWith(simulation).whenCompleteOrCancel(() {
@@ -125,11 +128,17 @@ class _TabsPreviewWidgetState extends State<SequenceList>
 
       return true;
     } else {
-      if (tabs[index].data.top > widget.minSpaceBetweenTwoTabs * (index + 1))
+      if (tabs[index].data.top > tabs[index].data.minTop )
         return true;
 
       return false;
     }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -140,34 +149,21 @@ class _TabsPreviewWidgetState extends State<SequenceList>
           _animationController.stop();
         }
         dragStartPoint = details.localPosition.dy.floorToDouble();
-        distance = 0;
       },
       onVerticalDragDown: (details) {
         if (_animationController.isAnimating) {
           _animationController.stop();
         }
 
-        distance = 0;
       },
       onVerticalDragUpdate: (details) {
-
-        
 
         double diffPosition =
             (details.localPosition.dy - dragStartPoint);
         forwardDrag = diffPosition > 0;
 
-        if ((diffPosition > 0 && distance < 0) || (diffPosition < 0 && distance > 0)) {
-          distance = 0;
-        }
-
-        print({details.localPosition.dy: distance});
-        print(diffPosition);
-        
         dragStartPoint = details.localPosition.dy;
 
-        distance += diffPosition;
-        // tabs[tabs.length - 1].updatePosition(diffPosition);
         for (int i = tabs.length - 1; i >= 0; i--) {
           if (shouldUpdatePosition(i, forwardDrag, diffPosition)) {
             tabs[i].updatePosition(diffPosition);
@@ -177,13 +173,12 @@ class _TabsPreviewWidgetState extends State<SequenceList>
       onVerticalDragEnd: (details) {
         runAnimation(
             height: mq.size.height,
-            distance: distance,
             velocity: details.velocity);
       },
       child: Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
-        color: Colors.green,
+        decoration: widget.listContainerDecoration,
         child: Stack(
           alignment: Alignment.topCenter,
           children: tabs,

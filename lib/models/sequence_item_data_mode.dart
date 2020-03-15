@@ -28,17 +28,19 @@ class SequenceItemData {
   double get top => this._top;
 
   double toMoveRegardingMaxSpaceBTT(
-      double itemTop, double linkedItemTop, double distance) {
+      SequenceItemData item, SequenceItemData linkedItem, double distance) {
     double toMove = distance;
-    if (linkedItemTop != null) {
-        double space = itemTop - linkedItemTop;
+    if (linkedItem != null) {
+        double space = item.top - linkedItem.top;
 
       if (distance > 0) {
         if (space != maxSpaceBetweenTwoTabs && space + distance > maxSpaceBetweenTwoTabs) {
           toMove = distance - (space - maxSpaceBetweenTwoTabs);
         }
       } else if (distance < 0) {
-        if (space + distance < minSpaceBetweenTwoTabs) {
+        if (item.minTop == linkedItem.minTop) {
+          toMove = distance;
+        } else if (space + distance < minSpaceBetweenTwoTabs) {
           toMove = distance - (space - minSpaceBetweenTwoTabs);
         }
       }
@@ -47,7 +49,6 @@ class SequenceItemData {
       return 0;
     }
     
-    // print({'toMove': toMove});
     return toMove;
   }
 
@@ -59,7 +60,6 @@ class SequenceItemData {
     } else if (distance < 0 && _top + distance < minTop) {
       validDistance = distance - ((_top + distance) - minTop);
     }
-    // print({'validDistance': validDistance});
     return validDistance;
   }
 
@@ -73,8 +73,8 @@ class SequenceItemData {
   double updateTop(double distance) {
     if (_moveState(distance > 0)) {
       this._top += validMoveDistance(toMoveRegardingMaxSpaceBTT(
-        this._top,
-        linkedItemData?.top,
+        this,
+        linkedItemData,
         distance,
       ));
     }

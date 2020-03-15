@@ -1,4 +1,4 @@
-# scroll_tabs_in_sequence
+# Sequence Scroll
 Adapted from Chrome
 
 ## Still in development 

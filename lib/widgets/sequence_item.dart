@@ -12,6 +12,7 @@ class SequenceItem extends StatefulWidget {
   final double height;
   final bool isFirst;
   final SequenceItemData Function() linkedItemData;
+  BoxDecoration decoration;
   SequenceItem({
     // @required this.title,
     @required this.child,
@@ -23,6 +24,7 @@ class SequenceItem extends StatefulWidget {
     @required this.minWidth,
     @required this.height,
     @required this.isFirst,
+    this.decoration,
   });
 
   final _TabWidgetState _state = _TabWidgetState();
@@ -71,14 +73,11 @@ class _TabWidgetState extends State<SequenceItem>
   Widget build(BuildContext context) {
     return Positioned(
       top: top,
-      child: Card(
-        elevation: 4,
-        child: Container(
-          width: MediaQuery.of(context).size.width * .75,
-          height: tabHeight,
-          color: Colors.lime,
-          child: widget.child,
-        ),
+      child: Container(
+        decoration: widget.decoration,
+        width: widget.minWidth ?? MediaQuery.of(context).size.width * .75,
+        height: tabHeight,
+        child: widget.child,
       ),
     );
   }
