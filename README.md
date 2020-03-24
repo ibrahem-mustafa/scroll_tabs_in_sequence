@@ -70,4 +70,4 @@ Expanded(
 ## Still in **DEVELOPMENT**
 
 You could use it if you want but you might face **UNKNOWN** issue,
-if you face one till me and i will look at it
+if you face one tell me and i will look at it
