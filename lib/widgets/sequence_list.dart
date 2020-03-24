@@ -10,8 +10,8 @@ class SequenceList extends StatefulWidget {
   final double maxSpaceBetweenTwoTabs;
   final double minSpaceBetweenTwoTabs;
   final int applyMinSpaceTill;
-  BoxDecoration itemDecoration;
-  BoxDecoration listContainerDecoration;
+  final BoxDecoration itemDecoration;
+  final BoxDecoration listContainerDecoration;
 
   SequenceList({
     @required this.context,
