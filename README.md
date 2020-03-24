@@ -15,7 +15,7 @@ Expanded(
 
     // basically it's the tab/item height
     minTabHeight: tabHeight,
-    // specify the space between tab/item and the next one that required to start move
+    // Specify the space required  between tab/item and the next one to start move
     maxSpaceBetweenTwoTabs: tabHeight * .25,
     // Min space between two tabs
     minSpaceBetweenTwoTabs: 5,
@@ -38,10 +38,10 @@ Expanded(
 
     /////////////////////////// OPTIONAL ///////////////////////////
 
-    // basically it's the tab/item width otherwise it will take 75% of the view width
+    // Basically it's the tab/item width otherwise it will take 75% of the view width
     minTabWidth: MediaQuery.of(context).size.width * .9,
 
-    // Means that min space with be applied till the tab ${4}, other tabs with be above each other [max: items length - 1]
+    // Means that min space will be applied till the tab ${4}, other tabs will be above each other [max: items length - 1]
     applyMinSpaceTill: 4,
 
     // Container of the full list decoration
