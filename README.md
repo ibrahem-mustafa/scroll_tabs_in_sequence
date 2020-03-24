@@ -65,7 +65,7 @@ Expanded(
 
 ## Preview
 
-![Sequence Scroll Preview](./sequenceScroll.gif)
+<img src="./sequenceScroll.gif" alt="Sequance Scroll Preview" width="350">
 
 ## Still in **DEVELOPMENT**
 
